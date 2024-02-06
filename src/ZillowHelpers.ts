@@ -247,7 +247,7 @@ const GetRandomHouseUrlFromSearch = async (
       console.log("html does not exist in cache");
       console.log("trying to go to: " + searchUrl);
       puppeteerExtra.use(StealthPlugin());
-      console.log("using stealth plugin");
+      console.log("using stealth plugin blegh");
       let browser;
       try {
         browser = await puppeteerExtra.launch({
