@@ -6,15 +6,13 @@
   "scripts": {
     "dev": "npx nodemon",
     "start": "node ./dist/src/index.js",
-    "build": "node node_modules/puppeteer/install.mjs && mkdir -p ./.cache && mv /app/.cache/puppeteer ./.cache && tsc -p .",
+    "gcp-build": "tsc -p .",
+    "build": "tsc -p .",
     "test": "ts-node-esm ./src/index.ts"
   },
   "author": "",
   "type": "module",
   "license": "ISC",
-  "engines": {
-    "node": "20.x"
-  },
   "dependencies": {
     "@tensorflow-models/deeplab": "^0.2.2",
     "@tensorflow/tfjs-node": "^4.17.0",
