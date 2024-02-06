@@ -6,8 +6,7 @@
   "scripts": {
     "dev": "npx nodemon",
     "start": "node ./dist/src/index.js",
-    "build": "tsc -p .",
-    "heroku-postbuild": "mkdir ./.cache && mv /app/.cache/puppeteer ./.cache",
+    "build": "tsc -p . && mkdir ./.cache && mv /app/.cache/puppeteer ./.cache",
     "test": "ts-node-esm ./src/index.ts"
   },
   "author": "",
