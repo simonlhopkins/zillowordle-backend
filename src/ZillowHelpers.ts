@@ -250,6 +250,7 @@ const GetRandomHouseUrlFromSearch = async (
         browser = await puppeteerExtra.launch({ headless: "new" });
       } catch (e) {
         console.log("error setting up browser");
+        console.log(e);
         throw new Error("ERROR SETTING UP BROWSER");
       }
       console.log("browser created");
