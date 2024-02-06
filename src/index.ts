@@ -129,6 +129,8 @@ app.get("/zillow/new-house/random", async (req, res) => {
 
     res.send(gameData);
   } catch (e) {
+    console.error("error in /zillow/new-house/random");
+    console.log(e);
     res.status(501).send(e);
   }
 });
