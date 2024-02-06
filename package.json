@@ -8,7 +8,7 @@
     "start": "node ./dist/src/index.js",
     "gcp-build": "tsc -p .",
     "build": "tsc -p .",
-    "test": "mkdir ./.cache && mv /app/.cache/puppeteer ./.cache && ts-node-esm ./src/index.ts"
+    "test": "node node_modules/puppeteer/install.mjs && mkdir ./.cache && mv /app/.cache/puppeteer ./.cache && ts-node-esm ./src/index.ts"
   },
   "author": "",
   "type": "module",
