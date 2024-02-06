@@ -29,9 +29,10 @@ const generateSearchSavePath = (searchUrl: string) => {
 };
 
 const createSearchUrlFromCityData = (cityData: CityData) => {
-  return `https://www.zillow.com/${cityData.city
-    .toLowerCase()
-    .replaceAll(" ", "-")}-${cityData.state_id.toLowerCase()}/houses/`;
+  return "https://www.zillow.com/portland-or/houses/";
+  // return `https://www.zillow.com/${cityData.city
+  //   .toLowerCase()
+  //   .replaceAll(" ", "-")}-${cityData.state_id.toLowerCase()}/houses/`;
 };
 
 const createSearchUrlFromStateCity = (state: string, city: string) => {
