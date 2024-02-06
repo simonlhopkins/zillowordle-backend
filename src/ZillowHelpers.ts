@@ -170,7 +170,7 @@ const GetHTMLStringFromAddressUrl = async (
 
       puppeteerExtra.use(StealthPlugin());
       return puppeteerExtra
-        .launch({ headless: "new" })
+        .launch({ headless: "new", args: ["--no-sandbox"] })
         .then(async (browser: Browser) => {
           const page = await browser.newPage();
           await page.setUserAgent(
@@ -247,7 +247,10 @@ const GetRandomHouseUrlFromSearch = async (
       console.log("using stealth plugin");
       let browser;
       try {
-        browser = await puppeteerExtra.launch({ headless: "new" });
+        browser = await puppeteerExtra.launch({
+          headless: "new",
+          args: ["--no-sandbox"],
+        });
       } catch (e) {
         console.log("error setting up browser");
         console.log(e);
