@@ -7,7 +7,7 @@
     "dev": "npx nodemon",
     "start": "node ./dist/src/index.js",
     "gcp-build": "tsc -p .",
-    "build": "node node_modules/puppeteer/install.mjs && mkdir ./.cache && mv /app/.cache/puppeteer ./.cache && tsc -p .",
+    "build": "tsc -p .",
     "test": "ts-node-esm ./src/index.ts"
   },
   "author": "",
