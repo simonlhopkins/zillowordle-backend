@@ -7,7 +7,7 @@
     "dev": "npx nodemon",
     "start": "node ./dist/src/index.js",
     "gcp-build": "tsc -p .",
-    "build": "mkdir /app/CachedHTML/addresses && mkdir /app/CachedHTML/searches && node node_modules/puppeteer/install.mjs && mkdir ./.cache && mv /app/.cache/puppeteer ./.cache && tsc -p ."
+    "build": "mkdir -p ./CachedHTML/addresses && mkdir ./CachedHTML/searches && node node_modules/puppeteer/install.mjs && mkdir ./.cache && mv /app/.cache/puppeteer ./.cache && tsc -p ."
   },
   "author": "",
   "type": "module",
