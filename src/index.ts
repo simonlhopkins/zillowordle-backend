@@ -40,6 +40,7 @@ const getRandomHouseFromCache = async (): Promise<GameData> => {
     });
 
   const zillowHouseData = await GetZillowHouseDataFromHouseHtml(htmlString);
+  console.log("getting classifiedImages");
   const classifiedImages = await classifyListOfImages(zillowHouseData.images);
   let aIGuess = null;
   try {
@@ -99,6 +100,9 @@ app.get("/zillow/cached-house", async (req, res) => {
 
     res.send(gameData);
   } catch (e: any) {
+    if (!e.message) {
+      e.message = "unknown message";
+    }
     res.status(501).send(e.message);
   }
 });

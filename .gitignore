@@ -5,5 +5,6 @@
 !.elasticbeanstalk/*.global.yml
 node_modules/
 CachedZillowData/
-CachedHTML/
+CachedHTML/addresses/*
+CachedHTML/searches/*
 dist/

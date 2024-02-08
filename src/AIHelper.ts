@@ -1,6 +1,4 @@
 import axios from "axios";
-import fetch from "node-fetch";
-//https://github.com/tensorflow/tfjs-models
 import tf from "@tensorflow/tfjs-node";
 
 import deeplab from "@tensorflow-models/deeplab";
