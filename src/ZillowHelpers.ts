@@ -287,6 +287,7 @@ const GetRandomHouseUrlFromSearch = async (
     const randomHouseUrl = chooseRandom(allAddresses);
     return randomHouseUrl;
   }
+  console.log(searchPageHtmlString);
   throw "No house Urls found on zillow page!!";
 };
 
