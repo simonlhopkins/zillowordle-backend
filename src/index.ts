@@ -60,8 +60,12 @@ const invalidPathHandler = (
   response.send("invalid path");
 };
 
-app.get("/cities", async (req, res) => {
-  res.send(await getCityData());
+app.get("/cities", async (req, res, next) => {
+  try {
+    res.send(await getCityData());
+  } catch (e) {
+    next(e);
+  }
 });
 
 async function GetDailyZillow(): Promise<GameData> {

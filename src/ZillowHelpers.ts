@@ -256,7 +256,9 @@ const GetRandomHouseUrlFromSearch = async (
           return html;
         })
         .catch((e) => {
-          throw new Error("Error inside GetRandomHouseUrlFromSearch");
+          throw new Error(
+            "Error inside GetRandomHouseUrlFromSearch: " + e.message
+          );
         });
     });
   const addressRegex =
