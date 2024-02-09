@@ -28,6 +28,7 @@ const parseCSV = async (filePath: string) => {
   return records;
 };
 const getCityData = async (): Promise<CityData[]> => {
+  console.log("get city data");
   const records = await parseCSV(csvFilePath);
   return records;
 };
