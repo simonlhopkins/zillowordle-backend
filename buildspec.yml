@@ -9,6 +9,8 @@ phases:
   pre_build:
     commands:
       - echo Installing source NPM dependencies...
+      - sudo amazon-linux-extras install epel -y
+      - sudo yum install -y chromium
       - npm install
   build:
     commands:
