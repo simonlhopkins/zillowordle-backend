@@ -47,10 +47,10 @@ export const getNewHouse = async (cityData: CityData): Promise<GameData> => {
   const citySearchUrl = createSearchUrlFromCityData(cityData);
   const htmlString = await GetHouseHTMLFromSearchURL(citySearchUrl);
   const zillowHouseData = await GetZillowHouseDataFromHouseHtml(htmlString);
-  // const classifiedImages = await classifyListOfImages(zillowHouseData.images);
-  // const aIGuess = await GetLocationFromImage(classifiedImages[0].url);
-  const aIGuess = null;
-  const classifiedImages = null;
+  const classifiedImages = await classifyListOfImages(zillowHouseData.images);
+  const aIGuess = await GetLocationFromImage(classifiedImages[0].url);
+  // const aIGuess = null;
+  // const classifiedImages = null;
   return {
     zillowHouseData,
     aIGuess,

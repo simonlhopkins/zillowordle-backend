@@ -72,7 +72,7 @@ async function GetDailyZillow(): Promise<GameData> {
       const fileContent = await fs.readFile(filePath, "utf-8");
       return JSON.parse(fileContent) as GameData;
     })
-    .catch(async (err) => {
+    .catch(async () => {
       console.log("error");
       const newGameData = await getRandomHouseFromCache();
       await fs.writeFile(filePath, JSON.stringify(newGameData), "utf-8");

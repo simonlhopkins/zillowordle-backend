@@ -7,7 +7,7 @@
     "dev": "npx nodemon",
     "start": "node ./dist/src/index.js",
     "gcp-build": "tsc -p .",
-    "build": "mkdir -p ./CachedHTML/addresses && mkdir -p ./CachedHTML/searches && node node_modules/puppeteer/install.mjs && mkdir ./.cache && mv /app/.cache/puppeteer ./.cache && tsc -p ."
+    "build": "tsc -p ."
   },
   "author": "",
   "type": "module",
@@ -22,8 +22,8 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "node-schedule": "^2.1.1",
-    "puppeteer": "^21.7.0",
-    "puppeteer-core": "^21.7.0",
+    "puppeteer": "^20.3.0",
+    "puppeteer-core": "^20.3.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "unirest": "^0.6.0",
