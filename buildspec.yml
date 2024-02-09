@@ -21,4 +21,5 @@ artifacts:
     - package.json
     - .ebextensions/**/* # AWS Elastic Beanstalk configuration files
     - .puppeteerrc.cjs
+    - .npmrc
   discard-paths: no
