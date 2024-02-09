@@ -6,7 +6,6 @@ phases:
       nodejs: latest
     commands:
       - npm install -g typescript
-      - npm install -g mocha
   pre_build:
     commands:
       - echo Installing source NPM dependencies...
