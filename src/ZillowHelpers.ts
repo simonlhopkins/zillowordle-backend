@@ -1,13 +1,11 @@
 import * as fs from "fs/promises";
 import { config } from "dotenv";
-import * as cheerio from "cheerio";
 import puppeteerExtra from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { Browser, Puppeteer } from "puppeteer";
 import { chooseRandom } from "./Util.js";
 import { CityData } from "./types/CityData";
 import { ZillowHouseData } from "./types/ZillowHouseData";
-import { ErrorWithHtml } from "./types/ErrorWithHtml.js";
 config();
 //maybe I should just make another service to upload a zillow data to a database that this server can read from.
 const generateAddressSavePath = (addressURL: string) => {
@@ -151,7 +149,6 @@ const GetZillowHouseDataFromHouseHtml = (
 const GetHTMLStringFromAddressUrl = async (
   addressURL: string
 ): Promise<string> => {
-  // const desiredSavePath = generateAddressSavePath(addressURL);
   const desiredSavePath = generateAddressSavePath(addressURL);
   return fs
     .readFile(desiredSavePath)

@@ -87,7 +87,6 @@ app.get("/zillow/daily", async (req, res, next) => {
 app.get("/zillow/cached-house", async (req, res, next) => {
   try {
     const gameData = await getRandomHouseFromCache();
-
     res.send(gameData);
   } catch (e: any) {
     next(e);

@@ -1,1 +1,1 @@
-web: node ./dist/src/index.js
+web: node --optimize_for_size ./dist/src/index.js
