@@ -6,7 +6,6 @@ phases:
       nodejs: latest
     commands:
       - npm install -g typescript
-      - curl https://intoli.com/install-google-chrome.sh | bash
   pre_build:
     commands:
       - echo Installing source NPM dependencies...
@@ -14,6 +13,7 @@ phases:
   build:
     commands:
       - npm run build
+      - node node_modules/puppeteer/install.js
 
 artifacts:
   files:
