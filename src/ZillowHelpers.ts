@@ -266,7 +266,7 @@ const GetRandomHouseUrlFromSearch = async (
     /https:\/\/www\.zillow\.com\/homedetails\/[0-9A-Za-z\-]+\/\d+_zpid\//g;
   const matches = searchPageHtmlString.match(addressRegex);
 
-  if (matches && false) {
+  if (matches) {
     const allAddresses = Array.from(new Set(matches));
     const randomHouseUrl = chooseRandom(allAddresses);
     await fs.writeFile(desiredSavePath, searchPageHtmlString);
