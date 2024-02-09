@@ -13,13 +13,12 @@ phases:
   build:
     commands:
       - npm run build
-      - node node_modules/puppeteer/install.js
 
 artifacts:
   files:
     - dist/**/*
     - data/**/*
     - package.json
-    - ".ebextensions/**/*" # AWS Elastic Beanstalk configuration files
+    - .ebextensions/**/* # AWS Elastic Beanstalk configuration files
     - .puppeteerrc.cjs
   discard-paths: no
