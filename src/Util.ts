@@ -1,13 +1,13 @@
 import path from "node:path";
 import fs from "fs/promises";
-import { GameData } from "./types/GameData";
+import { GameData } from "./types/GameData.js";
 import {
   GetHouseHTMLFromSearchURL,
   GetZillowHouseDataFromHouseHtml,
   createSearchUrlFromCityData,
-} from "./ZillowHelpers";
-import { GetLocationFromImage, classifyListOfImages } from "./AIHelper";
-import { CityData } from "./types/CityData";
+} from "./ZillowHelpers.js";
+import { GetLocationFromImage, classifyListOfImages } from "./AIHelper.js";
+import { CityData } from "./types/CityData.js";
 
 export const chooseRandom = (arr: any[]) => {
   return arr[Math.floor(Math.random() * arr.length)];
