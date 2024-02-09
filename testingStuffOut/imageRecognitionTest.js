@@ -20,8 +20,7 @@ async function loadImageFromUrl(imageUrl) {
     const decodedImage = tf.node.decodeImage(new Uint8Array(response.data), 3);
     return decodedImage;
   } catch (error) {
-    console.error("Error fetching or processing the image:", error.message);
-    throw error;
+    throw new Error("Error fetching or processing the image");
   }
 }
 const loadDeepLab = async () => {

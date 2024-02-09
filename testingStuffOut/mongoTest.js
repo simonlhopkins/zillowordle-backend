@@ -13,7 +13,7 @@ async function connectToCluster(uri) {
  
         return mongoClient;
     } catch (error) {
-        throw Error('Connection to MongoDB Atlas failed!', error);
+        throw new Error('Connection to MongoDB Atlas failed!', error);
     }
  }
 

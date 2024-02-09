@@ -7,15 +7,16 @@ import { Browser, Puppeteer } from "puppeteer";
 import { chooseRandom } from "./Util.js";
 import { CityData } from "./types/CityData";
 import { ZillowHouseData } from "./types/ZillowHouseData";
+import { ErrorWithHtml } from "./types/ErrorWithHtml.js";
 config();
-
+//maybe I should just make another service to upload a zillow data to a database that this server can read from.
 const generateAddressSavePath = (addressURL: string) => {
   const addressRegex = /\/homedetails\/([^\/]+)/;
   const match = addressURL.match(addressRegex);
   if (match && match.length >= 2) {
     return `./CachedHTML/addresses/${match[1]}.html`;
   }
-  throw `Cannot find an address file from ${addressURL}`;
+  throw new Error(`Cannot find an address file from ${addressURL}`);
 };
 
 const generateSearchSavePath = (searchUrl: string) => {
@@ -25,7 +26,7 @@ const generateSearchSavePath = (searchUrl: string) => {
     const extractedValue = match[1];
     return `./CachedHTML/searches/${extractedValue}.html`;
   }
-  throw `Cannot find a search file from ${searchUrl}`;
+  throw new Error(`Cannot find a search file from ${searchUrl}`);
 };
 
 const createSearchUrlFromCityData = (cityData: CityData) => {
@@ -52,107 +53,99 @@ const GetHouseHTMLFromSearchURL = async (
 
 const GetZillowHouseDataFromHouseHtml = (
   htmlString: string
-): Promise<ZillowHouseData> => {
-  return new Promise((resolve, reject) => {
-    const scriptId = "__NEXT_DATA__";
-    const scriptType = "application/json";
-    const houseDataScriptRegex = new RegExp(
-      `<script\\s+id="${scriptId}"\\s+type="${scriptType}">(.*?)<\\/script>`,
-      "s"
-    );
-    const zillowLinkRegex = /<meta property="og:url" content="([^"]+)">/;
-    const zillowLinkMatch = htmlString.match(zillowLinkRegex);
-    const houseDataScriptMatch = htmlString.match(houseDataScriptRegex);
-    if (!zillowLinkMatch) {
-      reject(new Error("no url found in house html string"));
-      return;
-    }
-    if (!houseDataScriptMatch) {
-      reject(
-        new Error("no house data (__NEXT_DATA__) found in house html string")
-      );
-      return;
-    }
+): ZillowHouseData => {
+  const scriptId = "__NEXT_DATA__";
+  const scriptType = "application/json";
+  const houseDataScriptRegex = new RegExp(
+    `<script\\s+id="${scriptId}"\\s+type="${scriptType}">(.*?)<\\/script>`,
+    "s"
+  );
+  const zillowLinkRegex = /<meta property="og:url" content="([^"]+)">/;
+  const zillowLinkMatch = htmlString.match(zillowLinkRegex);
+  const houseDataScriptMatch = htmlString.match(houseDataScriptRegex);
+  if (!zillowLinkMatch) {
+    throw new Error("no url found in house html string");
+  }
+  if (!houseDataScriptMatch) {
+    throw new Error("no house data (__NEXT_DATA__) found in house html string");
+  }
 
-    const pagePropObj = JSON.parse(houseDataScriptMatch[1]);
-    const propertyData: any = Object.values(
-      JSON.parse(pagePropObj.props.pageProps.componentProps.gdpClientCache)
-    )[0];
-    const zillowHouseUrl = zillowLinkMatch[1];
-    const extractScores = (html: string) => {
-      const walkScoreMatch = html.match(/Walk Score.*?<a[^>]*>(.*?)<\/a>/);
-      const transitScoreMatch = html.match(
-        /Transit Score.*?<a[^>]*>(.*?)<\/a>/
-      );
-      const bikeScoreMatch = html.match(/Bike Score.*?<a[^>]*>(.*?)<\/a>/);
-      const walkScore = walkScoreMatch ? parseInt(walkScoreMatch[1], 10) : null;
-      const transitScore = transitScoreMatch
-        ? parseInt(transitScoreMatch[1], 10)
-        : null;
-      const bikeScore = bikeScoreMatch ? parseInt(bikeScoreMatch[1], 10) : null;
-      return { walkScore, transitScore, bikeScore };
-    };
+  const pagePropObj = JSON.parse(houseDataScriptMatch[1]);
+  const propertyData: any = Object.values(
+    JSON.parse(pagePropObj.props.pageProps.componentProps.gdpClientCache)
+  )[0];
+  const zillowHouseUrl = zillowLinkMatch[1];
+  const extractScores = (html: string) => {
+    const walkScoreMatch = html.match(/Walk Score.*?<a[^>]*>(.*?)<\/a>/);
+    const transitScoreMatch = html.match(/Transit Score.*?<a[^>]*>(.*?)<\/a>/);
+    const bikeScoreMatch = html.match(/Bike Score.*?<a[^>]*>(.*?)<\/a>/);
+    const walkScore = walkScoreMatch ? parseInt(walkScoreMatch[1], 10) : null;
+    const transitScore = transitScoreMatch
+      ? parseInt(transitScoreMatch[1], 10)
+      : null;
+    const bikeScore = bikeScoreMatch ? parseInt(bikeScoreMatch[1], 10) : null;
+    return { walkScore, transitScore, bikeScore };
+  };
 
-    const scores = extractScores(htmlString);
-    const {
-      responsivePhotos,
-      latitude,
-      longitude,
-      city,
-      state,
-      bedrooms,
-      bathrooms,
-      price,
-      yearBuilt,
-      streetAddress,
-      zipcode,
-      country,
-      currency,
-      resoFacts,
-      livingArea,
-      taxHistory,
-      priceHistory,
-      description,
-      timeOnZillow,
-      pageViewCount,
-      favoriteCount,
-      daysOnZillow,
-      timeZone,
-      propertyTaxRate,
-      lotSize,
-      livingAreaUnits,
-      datePostedString,
-      originalPhotos,
-      listingTypeDimension,
-      zestimate,
-      rentZestimate,
-    } = propertyData.property;
+  const scores = extractScores(htmlString);
+  const {
+    responsivePhotos,
+    latitude,
+    longitude,
+    city,
+    state,
+    bedrooms,
+    bathrooms,
+    price,
+    yearBuilt,
+    streetAddress,
+    zipcode,
+    country,
+    currency,
+    resoFacts,
+    livingArea,
+    taxHistory,
+    priceHistory,
+    description,
+    timeOnZillow,
+    pageViewCount,
+    favoriteCount,
+    daysOnZillow,
+    timeZone,
+    propertyTaxRate,
+    lotSize,
+    livingAreaUnits,
+    datePostedString,
+    originalPhotos,
+    listingTypeDimension,
+    zestimate,
+    rentZestimate,
+  } = propertyData.property;
 
-    const images = responsivePhotos.map(
-      (entry: { mixedSources: { jpeg: any[] } }) =>
-        entry.mixedSources.jpeg.filter(
-          (item: { width: number }) => item.width > 1500
-        )[0].url
-    );
-    resolve({
-      images,
-      city,
-      price,
-      bedrooms,
-      bathrooms,
-      yearBuilt,
-      streetAddress,
-      scores,
-      zestimate,
-      rentZestimate,
-      daysOnZillow,
-      livingArea,
-      state,
-      zillowHouseUrl,
-      latitude,
-      longitude,
-    });
-  });
+  const images = responsivePhotos.map(
+    (entry: { mixedSources: { jpeg: any[] } }) =>
+      entry.mixedSources.jpeg.filter(
+        (item: { width: number }) => item.width > 1500
+      )[0].url
+  );
+  return {
+    images,
+    city,
+    price,
+    bedrooms,
+    bathrooms,
+    yearBuilt,
+    streetAddress,
+    scores,
+    zestimate,
+    rentZestimate,
+    daysOnZillow,
+    livingArea,
+    state,
+    zillowHouseUrl,
+    latitude,
+    longitude,
+  };
 };
 
 const GetHTMLStringFromAddressUrl = async (
@@ -168,7 +161,7 @@ const GetHTMLStringFromAddressUrl = async (
     .catch(async () => {
       console.log("address html does not exist in cache");
 
-      puppeteerExtra.use(StealthPlugin());
+      // puppeteerExtra.use(StealthPlugin());
       return puppeteerExtra
         .launch({
           headless: "new",
@@ -176,9 +169,9 @@ const GetHTMLStringFromAddressUrl = async (
         })
         .then(async (browser: Browser) => {
           const page = await browser.newPage();
-          await page.setUserAgent(
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:121.0) Gecko/20100101 Firefox/121.0"
-          );
+          // await page.setUserAgent(
+          //   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:121.0) Gecko/20100101 Firefox/121.0"
+          // );
           await page.goto(addressURL);
           await page.waitForTimeout(5000);
           const html = await page.content();
@@ -187,7 +180,7 @@ const GetHTMLStringFromAddressUrl = async (
           return html;
         })
         .catch((e) => {
-          throw "Error inside GetHTMLStringFromAddressUrl";
+          throw new Error("Error inside GetHTMLStringFromAddressUrl");
         });
     });
 };
@@ -240,55 +233,51 @@ const GetRandomHouseUrlFromSearch = async (
   const searchPageHtmlString = await fs
     .readFile(desiredSavePath)
     .then((content) => {
-      console.log("html already exists");
+      console.log("search html already exists");
       return content.toString();
     })
     .catch(async () => {
-      console.log("html does not exist in cache");
-      console.log("trying to go to: " + searchUrl);
+      console.log("search html does not exist in cache");
       puppeteerExtra.use(StealthPlugin());
-      console.log("using stealth plugin blegh");
-      let browser;
-      try {
-        browser = await puppeteerExtra.launch({
+      return puppeteerExtra
+        .launch({
           headless: "new",
           args: ["--no-sandbox", "--disable-setuid-sandbox"],
+        })
+        .then(async (browser: Browser) => {
+          const page = await browser.newPage();
+          await page.setUserAgent(
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:121.0) Gecko/20100101 Firefox/121.0"
+          );
+          await page.setExtraHTTPHeaders({
+            searchQueryState: getSearchQueryHeader(),
+          });
+          await page.goto(searchUrl);
+          await page.waitForTimeout(5000);
+          const html = await page.content();
+          await browser.close();
+          return html;
+        })
+        .catch((e) => {
+          throw new Error("Error inside GetRandomHouseUrlFromSearch");
         });
-      } catch (e) {
-        console.log("error setting up browser");
-        console.log(e);
-        throw new Error("ERROR SETTING UP BROWSER");
-      }
-      console.log("browser created");
-      const page = await browser.newPage();
-      console.log("new page created");
-      await page.setUserAgent(
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:121.0) Gecko/20100101 Firefox/121.0"
-      );
-      await page.setExtraHTTPHeaders({
-        searchQueryState: getSearchQueryHeader(),
-      });
-      await page.goto(searchUrl);
-      await page.waitForTimeout(5000);
-      const html = await page.content();
-      console.log("html loaded");
-      await browser.close();
-      console.log("browser closed");
-      await fs.writeFile(desiredSavePath, html);
-      console.log("file written closed");
-      return html;
     });
   const addressRegex =
     /https:\/\/www\.zillow\.com\/homedetails\/[0-9A-Za-z\-]+\/\d+_zpid\//g;
   const matches = searchPageHtmlString.match(addressRegex);
 
-  if (matches) {
+  if (matches && false) {
     const allAddresses = Array.from(new Set(matches));
     const randomHouseUrl = chooseRandom(allAddresses);
+    await fs.writeFile(desiredSavePath, searchPageHtmlString);
     return randomHouseUrl;
+  } else {
+    await fs.writeFile("./CachedHTML/errors/error.html", searchPageHtmlString);
+
+    throw new Error(
+      "No house Urls found on zillow page!!: " + searchPageHtmlString
+    );
   }
-  console.log(searchPageHtmlString);
-  throw "No house Urls found on zillow page!!";
 };
 
 export {

@@ -96,6 +96,8 @@ export async function GetLocationFromImage(imageUrl: string) {
 
   try {
     const response = await axios.post(url, payload, { headers });
+    if (!(response.data.ai_lon && response.data.ai_lat))
+      throw new Error("no long or lat in response from Picarta");
     return {
       lng: response.data.ai_lon,
       lat: response.data.ai_lat,
