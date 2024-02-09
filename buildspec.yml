@@ -18,6 +18,7 @@ artifacts:
   files:
     - dist/**/*
     - data/**/*
+    - .platform/**/*
     - package.json
     - .ebextensions/**/* # AWS Elastic Beanstalk configuration files
     - .puppeteerrc.cjs
