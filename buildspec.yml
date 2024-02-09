@@ -23,4 +23,5 @@ artifacts:
     - package-lock.json
     - node_modules/**/*
     - ".ebextensions/**/*" # AWS Elastic Beanstalk configuration files
+    - .puppeteerrc.cjs
   discard-paths: no
