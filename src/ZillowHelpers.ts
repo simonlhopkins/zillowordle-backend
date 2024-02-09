@@ -173,7 +173,7 @@ const GetHTMLStringFromAddressUrl = async (
           await page.waitForTimeout(5000);
           const html = await page.content();
           await browser.close();
-          fs.writeFile(desiredSavePath, html);
+          // await fs.writeFile(desiredSavePath, html);
           return html;
         })
         .catch((e) => {
@@ -266,7 +266,7 @@ const GetRandomHouseUrlFromSearch = async (
   if (matches) {
     const allAddresses = Array.from(new Set(matches));
     const randomHouseUrl = chooseRandom(allAddresses);
-    await fs.writeFile(desiredSavePath, searchPageHtmlString);
+    // await fs.writeFile(desiredSavePath, searchPageHtmlString);
     return randomHouseUrl;
   } else {
     throw new Error(
