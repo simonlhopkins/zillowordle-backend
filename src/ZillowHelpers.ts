@@ -272,8 +272,6 @@ const GetRandomHouseUrlFromSearch = async (
     await fs.writeFile(desiredSavePath, searchPageHtmlString);
     return randomHouseUrl;
   } else {
-    await fs.writeFile("./CachedHTML/errors/error.html", searchPageHtmlString);
-
     throw new Error(
       "No house Urls found on zillow page!!: " + searchPageHtmlString
     );
