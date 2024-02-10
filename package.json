@@ -7,7 +7,8 @@
     "dev": "npx nodemon",
     "start": "node ./dist/src/index.js",
     "gcp-build": "tsc -p .",
-    "build": "tsc -p ."
+    "build": "tsc -p .",
+    "preview": "npm run build && NODE_ENV=production node dist/src/index.js"
   },
   "author": "",
   "type": "module",
@@ -25,9 +26,7 @@
     "puppeteer": "^20.3.0",
     "puppeteer-core": "^20.3.0",
     "puppeteer-extra": "^3.3.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2",
-    "unirest": "^0.6.0",
-    "website-scraper": "^5.3.1"
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

@@ -9,7 +9,7 @@ import { chooseRandom, getNewHouse, getRandomHouseFromCache } from "./Util.js";
 import { ErrorWithHtml } from "./types/ErrorWithHtml.js";
 
 config();
-
+console.log(process.env.NODE_ENV);
 const app = express();
 app.use(cors());
 
@@ -60,6 +60,27 @@ const invalidPathHandler = (
   response.send("invalid path");
 };
 
+const devEndpointGaurd = (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  if (process.env.NODE_ENV === "production") {
+    const productionEndpoints = ["/cities", "/daily"];
+
+    if (!productionEndpoints.includes(request.path)) {
+      const error = new Error(
+        "Access to this endpoint is restricted in production"
+      );
+      return next(error);
+    }
+  }
+
+  next();
+};
+
+app.use(devEndpointGaurd);
+
 app.get("/cities", async (req, res, next) => {
   try {
     res.send(await getCityData());
@@ -89,6 +110,10 @@ app.get("/zillow/daily", async (req, res, next) => {
 });
 
 app.get("/zillow/cached-house", async (req, res, next) => {
+  if (process.env.NODE_ENV == "production") {
+    next(new Error("endpoint only available in DEV"));
+    return;
+  }
   try {
     const gameData = await getRandomHouseFromCache();
     res.send(gameData);
@@ -97,7 +122,10 @@ app.get("/zillow/cached-house", async (req, res, next) => {
   }
 });
 app.get("/zillow/new-house/location", async (req, res, next) => {
-  console.log(req.query);
+  if (process.env.NODE_ENV == "production") {
+    next(new Error("endpoint only available in DEV"));
+    return;
+  }
   const { city, state } = req.query;
   const allCities = await getCityData();
   const cityData = allCities.find(
@@ -115,6 +143,10 @@ app.get("/zillow/new-house/location", async (req, res, next) => {
   }
 });
 app.get("/zillow/new-house/random", async (req, res, next) => {
+  if (process.env.NODE_ENV == "production") {
+    next(new Error("endpoint only available in DEV"));
+    return;
+  }
   const allCities = await getCityData();
   const cityData = chooseRandom(allCities);
   try {
