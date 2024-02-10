@@ -3,7 +3,7 @@ import { config } from "dotenv";
 import puppeteerExtra from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { Browser, Puppeteer } from "puppeteer";
-import { chooseRandom } from "./Util.js";
+import { chooseRandom, validateImageUrls } from "./Util.js";
 import { CityData } from "./types/CityData";
 import { ZillowHouseData } from "./types/ZillowHouseData";
 config();
@@ -126,6 +126,7 @@ const GetZillowHouseDataFromHouseHtml = (
         (item: { width: number }) => item.width > 1500
       )[0].url
   );
+
   return {
     images,
     city,
@@ -146,40 +147,42 @@ const GetZillowHouseDataFromHouseHtml = (
   };
 };
 
+async function GetHTMLStringWithPuppeteer(url: string, savePath?: string) {
+  puppeteerExtra.use(StealthPlugin());
+  const browser: Browser = await puppeteerExtra.launch({
+    headless: "new",
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
+  const page = await browser.newPage();
+  await page.setUserAgent(
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:121.0) Gecko/20100101 Firefox/121.0"
+  );
+  await page.goto(url);
+  await page.waitForTimeout(5000);
+  const html = await page.content();
+  await browser.close();
+  if (savePath) {
+    await fs.writeFile(savePath, html);
+  }
+  return html;
+}
+
 const GetHTMLStringFromAddressUrl = async (
   addressURL: string
 ): Promise<string> => {
   const desiredSavePath = generateAddressSavePath(addressURL);
-  return fs
-    .readFile(desiredSavePath)
-    .then((content) => {
-      return content.toString();
-    })
-    .catch(async () => {
-      console.log("address html does not exist in cache");
 
-      // puppeteerExtra.use(StealthPlugin());
-      return puppeteerExtra
-        .launch({
-          headless: "new",
-          args: ["--no-sandbox", "--disable-setuid-sandbox"],
-        })
-        .then(async (browser: Browser) => {
-          const page = await browser.newPage();
-          // await page.setUserAgent(
-          //   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:121.0) Gecko/20100101 Firefox/121.0"
-          // );
-          await page.goto(addressURL);
-          await page.waitForTimeout(5000);
-          const html = await page.content();
-          await browser.close();
-          // await fs.writeFile(desiredSavePath, html);
-          return html;
-        })
-        .catch((e) => {
-          throw new Error("Error inside GetHTMLStringFromAddressUrl");
-        });
-    });
+  try {
+    const content = await fs.readFile(desiredSavePath);
+    return content.toString();
+  } catch (e) {
+    console.log("address html does not exist in cache");
+    try {
+      return await GetHTMLStringWithPuppeteer(addressURL, desiredSavePath);
+    } catch (e) {
+      throw new Error("Error inside GetHTMLStringFromAddressUrl");
+    }
+  }
 };
 
 const getSearchQueryHeader = () => {
@@ -227,40 +230,22 @@ const GetRandomHouseUrlFromSearch = async (
   puppeteerExtra.use(StealthPlugin());
   const desiredSavePath = generateSearchSavePath(searchUrl);
 
-  const searchPageHtmlString = await fs
-    .readFile(desiredSavePath)
-    .then((content) => {
-      console.log("search html already exists");
-      return content.toString();
-    })
-    .catch(async () => {
-      console.log("search html does not exist in cache");
-      puppeteerExtra.use(StealthPlugin());
-      return puppeteerExtra
-        .launch({
-          headless: "new",
-          args: ["--no-sandbox", "--disable-setuid-sandbox"],
-        })
-        .then(async (browser: Browser) => {
-          const page = await browser.newPage();
-          await page.setUserAgent(
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:121.0) Gecko/20100101 Firefox/121.0"
-          );
-          await page.setExtraHTTPHeaders({
-            searchQueryState: getSearchQueryHeader(),
-          });
-          await page.goto(searchUrl);
-          await page.waitForTimeout(5000);
-          const html = await page.content();
-          await browser.close();
-          return html;
-        })
-        .catch((e) => {
-          throw new Error(
-            "Error inside GetRandomHouseUrlFromSearch: " + e.message
-          );
-        });
-    });
+  let searchPageHtmlString;
+  try {
+    const content = await fs.readFile(desiredSavePath);
+    searchPageHtmlString = content.toString();
+  } catch (e) {
+    console.log("search html does not exist in cache");
+    try {
+      searchPageHtmlString = await GetHTMLStringWithPuppeteer(
+        searchUrl,
+        desiredSavePath
+      );
+    } catch (e) {
+      throw new Error("Error inside GetHTMLStringFromAddressUrl");
+    }
+  }
+
   const addressRegex =
     /https:\/\/www\.zillow\.com\/homedetails\/[0-9A-Za-z\-]+\/\d+_zpid\//g;
   const matches = searchPageHtmlString.match(addressRegex);
@@ -268,7 +253,7 @@ const GetRandomHouseUrlFromSearch = async (
   if (matches) {
     const allAddresses = Array.from(new Set(matches));
     const randomHouseUrl = chooseRandom(allAddresses);
-    // await fs.writeFile(desiredSavePath, searchPageHtmlString);
+    await fs.writeFile(desiredSavePath, searchPageHtmlString);
     return randomHouseUrl;
   } else {
     throw new Error(

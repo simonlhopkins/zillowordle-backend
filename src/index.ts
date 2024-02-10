@@ -5,7 +5,13 @@ import { getCityData } from "./csvHelpers.js";
 import * as fs from "fs/promises";
 import * as schedule from "node-schedule";
 import { GameData } from "./types/GameData.js";
-import { chooseRandom, getNewHouse, getRandomHouseFromCache } from "./Util.js";
+import {
+  chooseRandom,
+  gameDataSchema,
+  getNewHouse,
+  getRandomHouseFromCache,
+  validateImageUrls,
+} from "./Util.js";
 import { ErrorWithHtml } from "./types/ErrorWithHtml.js";
 
 config();
@@ -66,9 +72,8 @@ const devEndpointGaurd = (
   next: NextFunction
 ) => {
   if (process.env.NODE_ENV === "production") {
-    const productionEndpoints = ["/cities", "/daily"];
-
-    if (!productionEndpoints.includes(request.path)) {
+    const devPrefix = "/zillow-dev";
+    if (request.path.startsWith(devPrefix)) {
       const error = new Error(
         "Access to this endpoint is restricted in production"
       );
@@ -90,30 +95,59 @@ app.get("/cities", async (req, res, next) => {
 });
 
 async function GetDailyZillow(): Promise<GameData> {
-  const filePath = "./CachedZillowData/daily.json";
-  return fs
-    .access(filePath, fs.constants.F_OK)
-    .then(async () => {
-      const fileContent = await fs.readFile(filePath, "utf-8");
-      return JSON.parse(fileContent) as GameData;
-    })
-    .catch(async () => {
-      console.log("error");
-      const newGameData = await getRandomHouseFromCache();
-      await fs.writeFile(filePath, JSON.stringify(newGameData), "utf-8");
-      return newGameData;
-    });
+  const filePath = "data/gameData.json";
+  try {
+    const cachedJSON = await gameDataSchema.validate(
+      JSON.parse(await fs.readFile(filePath, "utf-8"))
+    );
+    const dailyGameData = cachedJSON.daily as GameData;
+    dailyGameData.zillowHouseData.images = await validateImageUrls(
+      dailyGameData.zillowHouseData.images
+    );
+    return cachedJSON.daily as GameData;
+  } catch (e: any) {
+    console.log(e);
+    throw Error(
+      "error opening zillow game data json file on server: " + e.message
+    );
+  }
+}
+
+async function GetRandomCachedGameData(): Promise<GameData> {
+  const filePath = "data/gameData.json";
+  try {
+    const cachedJSON = await gameDataSchema.validate(
+      JSON.parse(await fs.readFile(filePath, "utf-8"))
+    );
+    // return cachedJSON.daily as GameData;
+    return chooseRandom(cachedJSON.cache);
+  } catch (e: any) {
+    console.log(e);
+    throw Error(
+      "error opening zillow game data json file on server: " + e.message
+    );
+  }
 }
 
 app.get("/zillow/daily", async (req, res, next) => {
-  const zillowGameData = await GetDailyZillow();
+  try {
+    const gameData: GameData = await GetDailyZillow();
+    res.send(gameData);
+  } catch (e) {
+    next(e);
+  }
 });
 
-app.get("/zillow/cached-house", async (req, res, next) => {
-  if (process.env.NODE_ENV == "production") {
-    next(new Error("endpoint only available in DEV"));
-    return;
+app.get("/zillow/random", async (req, res, next) => {
+  try {
+    const gameData: GameData = await GetRandomCachedGameData();
+    res.send(gameData);
+  } catch (e) {
+    next(e);
   }
+});
+
+app.get("/zillow-dev/cached-house", async (req, res, next) => {
   try {
     const gameData = await getRandomHouseFromCache();
     res.send(gameData);
@@ -121,11 +155,7 @@ app.get("/zillow/cached-house", async (req, res, next) => {
     next(e);
   }
 });
-app.get("/zillow/new-house/location", async (req, res, next) => {
-  if (process.env.NODE_ENV == "production") {
-    next(new Error("endpoint only available in DEV"));
-    return;
-  }
+app.get("/zillow-dev/new-house/location", async (req, res, next) => {
   const { city, state } = req.query;
   const allCities = await getCityData();
   const cityData = allCities.find(
@@ -142,7 +172,7 @@ app.get("/zillow/new-house/location", async (req, res, next) => {
     }
   }
 });
-app.get("/zillow/new-house/random", async (req, res, next) => {
+app.get("/zillow-dev/new-house/random", async (req, res, next) => {
   if (process.env.NODE_ENV == "production") {
     next(new Error("endpoint only available in DEV"));
     return;

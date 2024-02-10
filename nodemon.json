@@ -4,5 +4,8 @@
   ],
   "ext": ".ts,.js",
   "ignore": [],
-  "exec": "node --loader ts-node/esm ./src/index.ts"
+  "exec": "node --loader ts-node/esm ./src/index.ts",
+  "env": {
+    "NODE_ENV": "development"
+  }
 }
