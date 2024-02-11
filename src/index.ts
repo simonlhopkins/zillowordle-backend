@@ -49,7 +49,11 @@ const jsonWriter = async (
   response: Response,
   next: NextFunction
 ) => {
-  await writeGameDataToCache(gameData);
+  try {
+    await writeGameDataToCache({ ...gameData, classifiedImages: null });
+  } catch (e) {
+    next(e);
+  }
 };
 
 const errorResponder = (error: Error, request: Request, response: Response) => {
