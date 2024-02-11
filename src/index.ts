@@ -11,6 +11,7 @@ import {
   getNewHouse,
   getRandomHouseFromCache,
   validateImageUrls,
+  writeGameDataToCache,
 } from "./Util.js";
 import { ErrorWithHtml } from "./types/ErrorWithHtml.js";
 
@@ -42,12 +43,17 @@ const errorLogger = (
   next(error); // calling next middleware
 };
 
-const errorResponder = (
-  error: Error,
+const jsonWriter = async (
+  gameData: GameData,
   request: Request,
   response: Response,
   next: NextFunction
 ) => {
+  await writeGameDataToCache(gameData);
+};
+
+const errorResponder = (error: Error, request: Request, response: Response) => {
+  console.log("hewwo");
   response.header("Content-Type", "application/json");
   if (error instanceof ErrorWithHtml) {
     response.setHeader("Content-Type", "text/html");
@@ -57,11 +63,7 @@ const errorResponder = (
   }
 };
 
-const invalidPathHandler = (
-  request: Request,
-  response: Response,
-  next: NextFunction
-) => {
+const invalidPathHandler = (response: Response) => {
   response.status(404);
   response.send("invalid path");
 };
@@ -77,10 +79,11 @@ const devEndpointGaurd = (
       const error = new Error(
         "Access to this endpoint is restricted in production"
       );
-      return next(error);
+      response
+        .status(401)
+        .send("Access to this endpoint is restricted in production");
     }
   }
-
   next();
 };
 
@@ -133,6 +136,7 @@ app.get("/zillow/daily", async (req, res, next) => {
   try {
     const gameData: GameData = await GetDailyZillow();
     res.send(gameData);
+    next(gameData);
   } catch (e) {
     next(e);
   }
@@ -142,6 +146,7 @@ app.get("/zillow/random", async (req, res, next) => {
   try {
     const gameData: GameData = await GetRandomCachedGameData();
     res.send(gameData);
+    next(gameData);
   } catch (e) {
     next(e);
   }
@@ -151,6 +156,7 @@ app.get("/zillow-dev/cached-house", async (req, res, next) => {
   try {
     const gameData = await getRandomHouseFromCache();
     res.send(gameData);
+    next(gameData);
   } catch (e: any) {
     next(e);
   }
@@ -165,8 +171,9 @@ app.get("/zillow-dev/new-house/location", async (req, res, next) => {
     res.status(404).send("City Not Found");
   } else {
     try {
-      const zillowGameData = await getNewHouse(cityData);
-      res.send(zillowGameData);
+      const gameData = await getNewHouse(cityData);
+      res.send(gameData);
+      next(gameData);
     } catch (e) {
       next(e);
     }
@@ -181,12 +188,14 @@ app.get("/zillow-dev/new-house/random", async (req, res, next) => {
   const cityData = chooseRandom(allCities);
   try {
     const gameData = await getNewHouse(cityData);
-
     res.send(gameData);
+    next(gameData);
   } catch (e) {
     next(e);
   }
 });
+
+app.use(jsonWriter);
 
 app.use(requestLogger);
 

@@ -43,7 +43,6 @@ export const getRandomHouseFromCache = async (): Promise<GameData> => {
     aIGuess,
     classifiedImages,
   };
-  await writeGameDataToCache({ ...gameData, classifiedImages: null });
   return gameData;
 };
 
@@ -60,7 +59,7 @@ export const gameDataSchema = object({
     .required("cache is required"),
 }).required();
 
-async function writeGameDataToCache(gameData: GameData) {
+export async function writeGameDataToCache(gameData: GameData) {
   const gameDataFilePath = "data/gameData.json";
   let cachedJSON: InferType<typeof gameDataSchema>;
   try {
@@ -103,7 +102,6 @@ export const getNewHouse = async (cityData: CityData): Promise<GameData> => {
   };
 
   //write to json file here
-  await writeGameDataToCache({ ...gameData, classifiedImages: null });
   // const aIGuess = null;
   // const classifiedImages = null;
   return gameData;
