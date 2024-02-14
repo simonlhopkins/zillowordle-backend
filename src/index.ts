@@ -1,10 +1,8 @@
-import { config } from "dotenv";
-import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
-import { getCityData } from "./csvHelpers.js";
+import { config } from "dotenv";
+import express, { NextFunction, Request, Response } from "express";
 import * as fs from "fs/promises";
 import * as schedule from "node-schedule";
-import { GameData } from "./types/GameData.js";
 import {
   chooseRandom,
   gameDataSchema,
@@ -13,7 +11,8 @@ import {
   validateImageUrls,
   writeGameDataToCache,
 } from "./Util.js";
-import { ErrorWithHtml } from "./types/ErrorWithHtml.js";
+import { getCityData } from "./csvHelpers.js";
+import { GameData } from "./types/GameData.js";
 
 config();
 console.log(process.env.NODE_ENV);
@@ -39,32 +38,31 @@ const errorLogger = (
   response: Response,
   next: NextFunction
 ) => {
-  console.log(`error ${error.message}`);
+  console.log(`ERRORLOGGER: ${error.message}`);
   next(error); // calling next middleware
 };
 
-const jsonWriter = async (
-  gameData: GameData,
+// const jsonWriter = async (
+//   gameData: GameData,
+//   request: Request,
+//   response: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     await writeGameDataToCache({ ...gameData, classifiedImages: null });
+//   } catch (e) {
+//     next(e);
+//   }
+// };
+
+const errorResponder = (
+  error: Error,
   request: Request,
   response: Response,
   next: NextFunction
 ) => {
-  try {
-    await writeGameDataToCache({ ...gameData, classifiedImages: null });
-  } catch (e) {
-    next(e);
-  }
-};
-
-const errorResponder = (error: Error, request: Request, response: Response) => {
-  console.log("hewwo");
   response.header("Content-Type", "application/json");
-  if (error instanceof ErrorWithHtml) {
-    response.setHeader("Content-Type", "text/html");
-    response.status(501).send(error.htmlString);
-  } else {
-    response.status(501).send(error.message);
-  }
+  response.status(501).send(error.message);
 };
 
 const invalidPathHandler = (response: Response) => {
@@ -126,7 +124,6 @@ async function GetRandomCachedGameData(): Promise<GameData> {
     const cachedJSON = await gameDataSchema.validate(
       JSON.parse(await fs.readFile(filePath, "utf-8"))
     );
-    // return cachedJSON.daily as GameData;
     return chooseRandom(cachedJSON.cache);
   } catch (e: any) {
     console.log(e);
@@ -158,9 +155,20 @@ app.get("/zillow/random", async (req, res, next) => {
 
 app.get("/zillow-dev/cached-house", async (req, res, next) => {
   try {
+    //https://www.zillow.com/homedetails/704-W-High-St-Urbana-IL-61801/89056214_zpid/
+    // const str = await GetHTMLStringFromAddressUrl(
+    //   "https://www.zillow.com/homedetails/1800-Altamont-St-Marquette-MI-49855/106481584_zpid/"
+    // );
+    // const zillowHouseData = await GetZillowHouseDataFromHouseHtml(str);
+
     const gameData = await getRandomHouseFromCache();
+    // const gameData: GameData = {
+    //   zillowHouseData,
+    //   aIGuess: null,
+    //   classifiedImages: null,
+    // };
     res.send(gameData);
-    next(gameData);
+    await writeGameDataToCache({ ...gameData, classifiedImages: null });
   } catch (e: any) {
     next(e);
   }
@@ -177,7 +185,7 @@ app.get("/zillow-dev/new-house/location", async (req, res, next) => {
     try {
       const gameData = await getNewHouse(cityData);
       res.send(gameData);
-      next(gameData);
+      await writeGameDataToCache({ ...gameData, classifiedImages: null });
     } catch (e) {
       next(e);
     }
@@ -192,25 +200,31 @@ app.get("/zillow-dev/new-house/random", async (req, res, next) => {
   const cityData = chooseRandom(allCities);
   try {
     const gameData = await getNewHouse(cityData);
+    // // console.log(gameData);
+    // const gameData = await GetZillowHouseDataFromHouseHtml(
+    //   await GetHTMLStringFromAddressUrl(
+    //     "https://www.zillow.com/homedetails/23826-W-58th-Pl-Shawnee-KS-66226/339426678_zpid/"
+    //   )
+    // );
     res.send(gameData);
-    next(gameData);
-  } catch (e) {
+    await writeGameDataToCache({ ...gameData, classifiedImages: null });
+  } catch (e: any) {
     next(e);
   }
 });
 
-app.use(jsonWriter);
+// app.use(jsonWriter);
 
 app.use(requestLogger);
 
 // Attach the first Error handling Middleware
 // function defined above (which logs the error)
-app.use(errorLogger);
 
 // Attach the second Error handling Middleware
 // function defined above (which sends back the response)
-app.use(errorResponder);
 
+app.use(errorLogger);
+app.use(errorResponder);
 // Attach the fallback Middleware
 // function which sends back the response for invalid paths)
 app.use(invalidPathHandler);

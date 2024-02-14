@@ -1,16 +1,16 @@
-import path from "node:path";
 import fs from "fs/promises";
-import { GameData } from "./types/GameData.js";
+import path from "node:path";
+import { GetLocationFromImage, classifyListOfImages } from "./AIHelper.js";
 import {
   GetHouseHTMLFromSearchURL,
   GetZillowHouseDataFromHouseHtml,
   createSearchUrlFromCityData,
 } from "./ZillowHelpers.js";
-import { GetLocationFromImage, classifyListOfImages } from "./AIHelper.js";
 import { CityData } from "./types/CityData.js";
+import { GameData } from "./types/GameData.js";
 
-import { InferType, array, number, object, string } from "yup";
 import axios from "axios";
+import { InferType, array, object, string } from "yup";
 
 export const chooseRandom = (arr: any[]) => {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -52,7 +52,7 @@ export const gameDataSchema = object({
     .of(
       object({
         zillowHouseData: object({
-          streetAddress: string().required(),
+          streetAddress: string().required("street address is not in the data"),
         }).required(),
       })
     )
@@ -60,6 +60,7 @@ export const gameDataSchema = object({
 }).required();
 
 export async function writeGameDataToCache(gameData: GameData) {
+  console.log("trying to write game data: ", gameData);
   const gameDataFilePath = "data/gameData.json";
   let cachedJSON: InferType<typeof gameDataSchema>;
   try {
@@ -72,39 +73,56 @@ export async function writeGameDataToCache(gameData: GameData) {
       daily: gameData,
       cache: [],
     };
-  }
-  if (
-    cachedJSON.cache.find(
-      (item) =>
-        item.zillowHouseData.streetAddress ==
-        gameData.zillowHouseData.streetAddress
-    ) == undefined
-  ) {
-    cachedJSON.cache.push(gameData);
-  } else {
-    console.log(`${gameData.zillowHouseData.streetAddress} already in cache`);
-  }
 
-  await fs.writeFile(gameDataFilePath, JSON.stringify(cachedJSON, null, 2));
+    throw new Error("something went wrong parsing existing zillow data");
+  }
+  try {
+    if (
+      cachedJSON.cache.find(
+        (item) =>
+          item.zillowHouseData.streetAddress ==
+          gameData.zillowHouseData.streetAddress
+      ) == undefined
+    ) {
+      cachedJSON.cache.push(gameData);
+    } else {
+      console.log(`${gameData.zillowHouseData.streetAddress} already in cache`);
+    }
+
+    await fs.writeFile(gameDataFilePath, JSON.stringify(cachedJSON, null, 2));
+  } catch (e) {
+    throw new Error(
+      "Something went wrong while trying to write the new gamedata to json " +
+        JSON.stringify(gameData)
+    );
+  }
 }
 
 export const getNewHouse = async (cityData: CityData): Promise<GameData> => {
   const citySearchUrl = createSearchUrlFromCityData(cityData);
   const htmlString = await GetHouseHTMLFromSearchURL(citySearchUrl);
-  const zillowHouseData = GetZillowHouseDataFromHouseHtml(htmlString);
-  const classifiedImages = await classifyListOfImages(zillowHouseData.images);
-  const aIGuess = await GetLocationFromImage(classifiedImages[0].url);
+  console.log("finished getting house HTML");
 
-  const gameData: GameData = {
-    zillowHouseData,
-    aIGuess,
-    classifiedImages,
-  };
+  try {
+    console.log("trying to get new house");
+    const zillowHouseData = await GetZillowHouseDataFromHouseHtml(htmlString);
+    console.log(zillowHouseData);
+    const classifiedImages = await classifyListOfImages(zillowHouseData.images);
+    const aIGuess = await GetLocationFromImage(classifiedImages[0].url);
 
-  //write to json file here
-  // const aIGuess = null;
-  // const classifiedImages = null;
-  return gameData;
+    const gameData: GameData = {
+      zillowHouseData,
+      aIGuess,
+      classifiedImages,
+    };
+
+    //write to json file here
+    // const aIGuess = null;
+    // const classifiedImages = null;
+    return gameData;
+  } catch (e) {
+    throw new Error("problem processing htmlString after retrieving it: " + e);
+  }
 };
 
 //chat poo poo pee
@@ -125,11 +143,17 @@ export async function validateImageUrls(
           return null;
         }
       } catch (error: any) {
-        console.log(`Error: ${error.message}: ${imageUrl}`);
+        console.log(`Error validateImageUrls: ${error.message}: ${imageUrl}`);
         return null;
       }
     })
   ).then((images) => images.filter((image) => image != null));
 
   return validImages as string[];
+}
+
+export function sleep(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, milliseconds);
+  });
 }

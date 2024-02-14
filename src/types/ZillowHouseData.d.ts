@@ -15,6 +15,7 @@ export type ZillowHouseData = {
   rentZestimate: number | null;
   daysOnZillow: number;
   livingArea: string;
+  lotSize: string;
   state: string;
   zillowHouseUrl: string;
   latitude: number;
