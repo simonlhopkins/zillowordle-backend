@@ -137,7 +137,6 @@ app.get("/zillow/daily", async (req, res, next) => {
   try {
     const gameData: GameData = await GetDailyZillow();
     res.send(gameData);
-    next(gameData);
   } catch (e) {
     next(e);
   }
