@@ -143,7 +143,6 @@ export async function validateImageUrls(
           return null;
         }
       } catch (error: any) {
-        console.log(`Error validateImageUrls: ${error.message}: ${imageUrl}`);
         return null;
       }
     })
